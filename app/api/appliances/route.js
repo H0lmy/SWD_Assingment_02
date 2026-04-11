@@ -1,8 +1,53 @@
 import pool from "../../library/db.js";
 
 export async function POST(request){
-    const{user,appliance}=await request.json();
+    // open connection
     const connection = await pool.getConnection();
+    try{
+        await connection.beginTransaction();
+        // take the raw data sanitise it and than validate
+        const rawPayload = await request.json();
+        const cleaned =sanitizePayload(rawPayload);
+        const errors = validate(cleaned);
+        // return all errors if they exist
+        if(Object.keys(errors).length > 0){
+            return Response.json({errors},{status:400})
+        }
+
+        const {user,appliance} = cleaned;
+        // insertion query for users table
+        const [userResult] = await connection.query('INSERT INTO Appliance.users(firstName,lastName,address,mobile,email,eircode) VALUES (?,?,?,?,?,?)',
+            [user.firstName,user.lastName,user.address,user.mobile,user.email,user.eircode]
+        )
+
+        const newUserID = userResult.insertId;
+        // insertion appliance for users table
+        await connection.query(`INSERT INTO Appliance.appliance
+           (userID, applianceType, brand, modelNumber, serialNumber, purchaseDate, warrantyExpDate, cost)                                                                                                        
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [newUserID, appliance.applianceType, appliance.brand, appliance.modelNumber,
+                appliance.serialNumber, appliance.purchaseDate, appliance.warrantyExpDate, appliance.cost])
+        // save execution of both queries
+        await connection.commit();
+        // object is returned if the execution was successful
+        return Response.json({userID:newUserID},{status:201})
+
+
+
+
+    }catch(err){
+        // delete all the data sent to the system if error has occurred
+        await connection.rollback()
+        return Response.json({error:err.message},{status:500})
+    }finally {
+        // close the connection
+        connection.release()
+    }
+
+
+
+
+
 
 
 }
@@ -36,7 +81,7 @@ function validate(payload) {
     }
 
     if (!/^[A-Z]\d{2}[A-Z0-9]{4}$/.test(user.eircode)) {
-        errors.user.eircode = 'Invalid Eircode. Expected format: A00 XXXX'
+        errors.user.eircode = 'Invalid eircode. Expected format: A00 XXXX'
     }
 
     if (!appliance.applianceType) {
