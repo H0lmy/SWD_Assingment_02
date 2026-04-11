@@ -1,7 +1,7 @@
-'use client'
-
-import ApplianceForm from './components/ApplianceForm'
-
 export default function Home() {
-  return <ApplianceForm />
+  return (
+    <main>
+      <h1>Appliance Management System</h1>
+    </main>
+  )
 }
