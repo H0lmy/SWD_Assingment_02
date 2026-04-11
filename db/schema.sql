@@ -12,3 +12,18 @@ CREATE TABLE IF NOT EXISTS users (
     email     VARCHAR(255) NOT NULL UNIQUE,
     eircode   VARCHAR(10)
 );
+
+
+CREATE table if not exists appliance
+(
+    apllianceID     BIGINT auto_increment PRIMARY KEY,
+    applianceType   varchar(100),
+    brand           varchar(255),
+    modelNumber     varchar(20),
+    serialNumber    varchar(20),
+    purchaseDate    date,
+    warrantyExpDate date,
+    cost            decimal(6, 2)
+);
+
+alter table appliance rename COLUMN apllianceID to applianceID;
