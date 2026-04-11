@@ -1,0 +1,113 @@
+.appliance-form,
+.appliance-confirmation {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 420px;
+  border: 1px solid #3a3a3a;
+}
+
+.appliance-form h2,
+.appliance-confirmation h2 {
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+}
+
+.appliance-confirmation p {
+  margin-bottom: 1rem;
+  color: #b0b0b0;
+}
+
+.appliance-confirmation ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.appliance-confirmation ul li {
+  padding: 0.3rem 0;
+  color: #b0b0b0;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.appliance-confirmation ul li strong {
+  color: #e0e0e0;
+}
+
+.appliance-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.appliance-form .form-group label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #b0b0b0;
+}
+
+.appliance-form .form-group input,
+.appliance-form .form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.appliance-form .error {
+  display: block;
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.appliance-form .submit-btn,
+.appliance-confirmation .submit-btn {
+  padding: 0.5rem 1.5rem;
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.appliance-form .submit-btn:hover,
+.appliance-confirmation .submit-btn:hover {
+  background-color: #555;
+}
+
+.success-message {
+  background-color: #1e3a1e;
+  border: 1px solid #2e5a2e;
+  color: #8fdf8f;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.inventory-list {
+  margin-top: 2rem;
+  border-top: 1px solid #3a3a3a;
+  padding-top: 1.5rem;
+}
+
+.inventory-list h3 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.inventory-item {
+  background-color: #333;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #b0b0b0;
+  line-height: 1.5;
+}
+
+.inventory-item strong {
+  color: #e0e0e0;
+}

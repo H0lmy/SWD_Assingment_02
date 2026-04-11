@@ -1,0 +1,47 @@
+[
+  {
+    "eircode": "D08 TWP8",
+    "applianceType": "Dishwasher",
+    "brand": "Samsung",
+    "modelNumber": "999-777-8888",
+    "serialNumber": "9999-9999-9999",
+    "purchaseDate": "29/07/2007",
+    "warrantyDate": "12/12/2078"
+  },
+  {
+    "eircode": "D08 TWP8",
+    "applianceType": "Microwave",
+    "brand": "Samsung",
+    "modelNumber": "999-777-8888",
+    "serialNumber": "9999-9999-9999",
+    "purchaseDate": "29/07/2007",
+    "warrantyDate": "12/12/2078"
+  },
+  {
+    "eircode": "D08 TWP8",
+    "applianceType": "Washing Machine",
+    "brand": "Samsung",
+    "modelNumber": "999-777-8888",
+    "serialNumber": "9999-9999-9999",
+    "purchaseDate": "29/07/2007",
+    "warrantyDate": "12/12/2078"
+  },
+  {
+    "eircode": "D08 TWP8",
+    "applianceType": "Fridge",
+    "brand": "Samsung",
+    "modelNumber": "999-777-8888",
+    "serialNumber": "9999-9999-9999",
+    "purchaseDate": "29/07/2007",
+    "warrantyDate": "12/12/2078"
+  },
+  {
+    "eircode": "D08 TWP8",
+    "applianceType": "Washing Machine",
+    "brand": "Samsung",
+    "modelNumber": "999-777-8888",
+    "serialNumber": "9999-9999-9999",
+    "purchaseDate": "29/07/2007",
+    "warrantyDate": "12/12/2078"
+  }
+]
