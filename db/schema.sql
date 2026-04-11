@@ -27,3 +27,11 @@ CREATE table if not exists appliance
 );
 
 alter table appliance rename COLUMN apllianceID to applianceID;
+
+ALTER TABLE appliance
+    ADD COLUMN userID BIGINT NOT NULL,
+    ADD CONSTRAINT fk_appliance_user
+        FOREIGN KEY (userID) REFERENCES users(userID)
+            ON DELETE CASCADE;
+
+
