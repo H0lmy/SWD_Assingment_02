@@ -1,20 +1,26 @@
 import pool from "../../library/db.js";
 
 export async function POST(request) {
-    // open connection
-    const connection = await pool.getConnection();
+    let rawPayload
     try {
-        await connection.beginTransaction();
-        // take the raw data sanitise it and than validate
-        const rawPayload = await request.json();
-        const cleaned = sanitizePayload(rawPayload);
-        const errors = validate(cleaned);
-        // return all errors if they exist
-        if (Object.keys(errors).length > 0) {
-            return Response.json({errors}, {status: 400})
-        }
+        rawPayload = await request.json()
+    } catch {
+        return Response.json({error: 'Invalid JSON body.'}, {status: 400})
+    }
 
-        const {user, appliance} = cleaned;
+    // take the raw data sanitise it and than validate
+    const cleaned = sanitizePayload(rawPayload)
+    const errors = validate(cleaned)
+    // return all errors if they exist
+    if (Object.keys(errors).length > 0) {
+        return Response.json({errors}, {status: 400})
+    }
+
+    const {user, appliance} = cleaned
+    // open connection
+    const connection = await pool.getConnection()
+    try {
+        await connection.beginTransaction()
         // insertion query for users table
         const [userResult] = await connection.query('INSERT INTO Appliance.users(firstName,lastName,address,mobile,email,eircode) VALUES (?,?,?,?,?,?)',
             [user.firstName, user.lastName, user.address, user.mobile, user.email, user.eircode]
@@ -37,6 +43,13 @@ export async function POST(request) {
     } catch (err) {
         // delete all the data sent to the system if error has occurred
         await connection.rollback()
+        // duplicate email triggers a UNIQUE constraint violation — surface it as a 409
+        if (err.code === 'ER_DUP_ENTRY') {
+            return Response.json(
+                {errors: {user: {email: 'This email is already registered.'}}},
+                {status: 409}
+            )
+        }
         return Response.json({error: err.message}, {status: 500})
     } finally {
         // close the connection
@@ -44,6 +57,45 @@ export async function POST(request) {
     }
 
 
+}
+
+
+
+export async function GET(request) {
+    const {searchParams} = new URL(request.url)
+    const serialNumber = (searchParams.get('serialNumber') ?? '').trim()
+
+    // validate the format before
+    if (!/^\d{4}-\d{4}-\d{4}$/.test(serialNumber)) {
+        return Response.json(
+            {error: 'Invalid serial number. Expected format: 0000-0000-0000.'},
+            {status: 400}
+        )
+    }
+
+    // open connection
+    const connection = await pool.getConnection()
+    try {
+        const [rows] = await connection.query(
+            'SELECT appliance.applianceType,appliance.serialNumber,appliance.brand,appliance.cost FROM Appliance.appliance WHERE serialNumber = ?',
+            [serialNumber]
+        )
+
+        // if not match - return 404
+        if (rows.length === 0) {
+            return Response.json(
+                {error: 'No appliance found for that serial number.'},
+                {status: 404}
+            )
+        }
+        // return the data if its retrieved from db
+        return Response.json(rows, {status: 200})
+    } catch (err) {
+        return Response.json({error: err.message}, {status: 500})
+    } finally {
+        // release the connection back to the pool
+        connection.release()
+    }
 }
 
 function validate(payload) {
@@ -64,10 +116,14 @@ function validate(payload) {
 
     if (!user.address) {
         errors.user.address = 'Address is required.'
+    } else if (user.address.length > 255) {
+        errors.user.address = 'Address cannot exceed 255 characters.'
     }
 
     if (!user.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
         errors.user.email = 'Please enter a valid email.'
+    } else if (user.email.length > 255) {
+        errors.user.email = 'Email cannot exceed 255 characters.'
     }
 
     if (!user.mobile || !/^\+?\d{10,15}$/.test(user.mobile)) {
@@ -80,10 +136,14 @@ function validate(payload) {
 
     if (!appliance.applianceType) {
         errors.appliance.applianceType = 'Appliance type is required.'
+    } else if (appliance.applianceType.length > 100) {
+        errors.appliance.applianceType = 'Appliance type cannot exceed 100 characters.'
     }
 
     if (!appliance.brand) {
         errors.appliance.brand = 'Brand is required.'
+    } else if (appliance.brand.length > 255) {
+        errors.appliance.brand = 'Brand cannot exceed 255 characters.'
     }
 
     if (!/^\d{3}-\d{3}-\d{4}$/.test(appliance.modelNumber)) {
@@ -109,11 +169,12 @@ function validate(payload) {
     ) {
         errors.appliance.warrantyExpDate = 'Warranty cannot be earlier than purchase date.'
     }
-
-    if (appliance.cost === null || appliance.cost <= 0) {
-        errors.appliance.cost = 'Cost must be a positive number.'
-    } else if (Math.round(appliance.cost * 100) / 100 !== appliance.cost) {
-        errors.appliance.cost = 'Cost can have at most 2 decimal places.'
+    if (appliance.cost === null) {
+        errors.appliance.cost = 'Cost must be a positive number with at most 2 decimal places.'
+    } else if (appliance.cost <= 0) {
+        errors.appliance.cost = 'Cost must be greater than 0.'
+    } else if (appliance.cost > 9999.99) {
+        errors.appliance.cost = 'Cost cannot exceed 9999.99.'
     }
 
     // strip empty error buckets so the response is clean
@@ -155,12 +216,22 @@ function toMysqlDate(str) {
     const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(str.trim())
     if (!match) return null
     const [, day, month, year] = match
+    const d = new Date(`${year}-${month}-${day}`)
+    if (
+        d.getFullYear() !== Number(year) ||
+        d.getMonth() + 1 !== Number(month) ||
+        d.getDate() !== Number(day)
+    ) {
+        return null
+    }
     return `${year}-${month}-${day}`   // 'YYYY-MM-DD' is what MySQL DATE valid format required
 }
 
 // conversion to javascript number function
 function toNumber(val) {
     if (val === null || val === undefined || val === '') return null
-    const n = Number(val)
+    const str = String(val).trim()
+    if (!/^\d+(\.\d{1,2})?$/.test(str)) return null
+    const n = Number(str)
     return Number.isFinite(n) ? n : null
 }
