@@ -1,7 +1,10 @@
 export default function Home() {
   return (
-    <main>
-      <h1>Appliance Management System</h1>
-    </main>
+    <div className="home-actions">
+      <button>Add Appliance</button>
+      <button>Search Appliance</button>
+      <button>Update Appliance</button>
+      <button>Delete Appliance</button>
+    </div>
   )
 }

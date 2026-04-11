@@ -1,0 +1,32 @@
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2.5rem;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+  width: 320px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.home-actions button {
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e0e0e0;
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+.home-actions button:hover {
+  background-color: #4a4a4a;
+  border-color: #777;
+}
+
+.home-actions button:active {
+  transform: scale(0.98);
+}
