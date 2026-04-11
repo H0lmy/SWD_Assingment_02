@@ -1,60 +1,54 @@
 import pool from "../../library/db.js";
 
-export async function POST(request){
+export async function POST(request) {
     // open connection
     const connection = await pool.getConnection();
-    try{
+    try {
         await connection.beginTransaction();
         // take the raw data sanitise it and than validate
         const rawPayload = await request.json();
-        const cleaned =sanitizePayload(rawPayload);
+        const cleaned = sanitizePayload(rawPayload);
         const errors = validate(cleaned);
         // return all errors if they exist
-        if(Object.keys(errors).length > 0){
-            return Response.json({errors},{status:400})
+        if (Object.keys(errors).length > 0) {
+            return Response.json({errors}, {status: 400})
         }
 
-        const {user,appliance} = cleaned;
+        const {user, appliance} = cleaned;
         // insertion query for users table
         const [userResult] = await connection.query('INSERT INTO Appliance.users(firstName,lastName,address,mobile,email,eircode) VALUES (?,?,?,?,?,?)',
-            [user.firstName,user.lastName,user.address,user.mobile,user.email,user.eircode]
+            [user.firstName, user.lastName, user.address, user.mobile, user.email, user.eircode]
         )
 
         const newUserID = userResult.insertId;
         // insertion appliance for users table
         await connection.query(`INSERT INTO Appliance.appliance
-           (userID, applianceType, brand, modelNumber, serialNumber, purchaseDate, warrantyExpDate, cost)                                                                                                        
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                                (userID, applianceType, brand, modelNumber, serialNumber, purchaseDate, warrantyExpDate,
+                                 cost)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [newUserID, appliance.applianceType, appliance.brand, appliance.modelNumber,
                 appliance.serialNumber, appliance.purchaseDate, appliance.warrantyExpDate, appliance.cost])
         // save execution of both queries
         await connection.commit();
         // object is returned if the execution was successful
-        return Response.json({userID:newUserID},{status:201})
+        return Response.json({userID: newUserID}, {status: 201})
 
 
-
-
-    }catch(err){
+    } catch (err) {
         // delete all the data sent to the system if error has occurred
         await connection.rollback()
-        return Response.json({error:err.message},{status:500})
-    }finally {
+        return Response.json({error: err.message}, {status: 500})
+    } finally {
         // close the connection
         connection.release()
     }
 
 
-
-
-
-
-
 }
 
 function validate(payload) {
-    const errors = { user: {}, appliance: {} }
-    const { user, appliance } = payload
+    const errors = {user: {}, appliance: {}}
+    const {user, appliance} = payload
 
     if (!user.firstName) {
         errors.user.firstName = 'First name is required.'
@@ -130,30 +124,28 @@ function validate(payload) {
 }
 
 
-
-
 function sanitizePayload(payload) {
-    const { user = {}, appliance = {} } = payload
+    const {user = {}, appliance = {}} = payload
 
     return {
         // sanitising the user fields before validation
         user: {
             firstName: (user.firstName ?? '').trim(),
-            lastName:  (user.lastName  ?? '').trim(),
-            address:   (user.address   ?? '').trim(),
-            mobile:    (user.mobile    ?? '').replace(/[^\d+]/g, ''),
-            email:     (user.email     ?? '').trim().toLowerCase(),
-            eircode:   (user.eircode   ?? '').replace(/\s+/g, '').toUpperCase(),
+            lastName: (user.lastName ?? '').trim(),
+            address: (user.address ?? '').trim(),
+            mobile: (user.mobile ?? '').replace(/[^\d+]/g, ''),
+            email: (user.email ?? '').trim().toLowerCase(),
+            eircode: (user.eircode ?? '').replace(/\s+/g, '').toUpperCase(),
         },
-    // sanitising the appliance fields before validation
+        // sanitising the appliance fields before validation
         appliance: {
-            applianceType:   (appliance.applianceType ?? '').trim(),
-            brand:           (appliance.brand         ?? '').trim(),
-            modelNumber:     (appliance.modelNumber   ?? '').trim(),
-            serialNumber:    (appliance.serialNumber  ?? '').trim(),
-            purchaseDate:    toMysqlDate(appliance.purchaseDate),
+            applianceType: (appliance.applianceType ?? '').trim(),
+            brand: (appliance.brand ?? '').trim(),
+            modelNumber: (appliance.modelNumber ?? '').trim(),
+            serialNumber: (appliance.serialNumber ?? '').trim(),
+            purchaseDate: toMysqlDate(appliance.purchaseDate),
             warrantyExpDate: toMysqlDate(appliance.warrantyExpDate),
-            cost:            toNumber(appliance.cost),
+            cost: toNumber(appliance.cost),
         },
     }
 }
@@ -165,6 +157,7 @@ function toMysqlDate(str) {
     const [, day, month, year] = match
     return `${year}-${month}-${day}`   // 'YYYY-MM-DD' is what MySQL DATE valid format required
 }
+
 // conversion to javascript number function
 function toNumber(val) {
     if (val === null || val === undefined || val === '') return null
