@@ -118,7 +118,7 @@ export async function GET(request) {
     const whereClause = conditions.join(' AND ');
     try {
         const [rows] = await connection.query(
-            `SELECT applianceType, serialNumber, brand, modelNumber, purchaseDate, warrantyExpDate, cost
+            `SELECT *
              FROM Appliance.appliance
              WHERE ${whereClause}`,
             params
