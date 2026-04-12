@@ -22,35 +22,42 @@ export async function POST(request) {
     const connection = await pool.getConnection()
     try {
         await connection.beginTransaction()
-        // insertion query for users table
-        const [userResult] = await connection.query('INSERT INTO Appliance.users(firstName,lastName,address,mobile,email,eircode) VALUES (?,?,?,?,?,?)',
-            [user.firstName, user.lastName, user.address, user.mobile, user.email, user.eircode]
+
+        // check if user already exists by email
+        const [existingUser] = await connection.query(
+            'SELECT userID FROM Appliance.users WHERE email = ?',
+            [user.email]
         )
 
-        const newUserID = userResult.insertId;
-        // insertion appliance for users table
+        let userID
+        if (existingUser.length > 0) {
+            // user already in db — use their existing ID
+            userID = existingUser[0].userID
+        } else {
+            // new user — insert and get the new ID
+            const [userResult] = await connection.query(
+                'INSERT INTO Appliance.users(firstName,lastName,address,mobile,email,eircode) VALUES (?,?,?,?,?,?)',
+                [user.firstName, user.lastName, user.address, user.mobile, user.email, user.eircode]
+            )
+            userID = userResult.insertId
+        }
+
+        // insert the appliance linked to the user
         await connection.query(`INSERT INTO Appliance.appliance
                                 (userID, applianceType, brand, modelNumber, serialNumber, purchaseDate, warrantyExpDate,
                                  cost)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [newUserID, appliance.applianceType, appliance.brand, appliance.modelNumber,
+            [userID, appliance.applianceType, appliance.brand, appliance.modelNumber,
                 appliance.serialNumber, appliance.purchaseDate, appliance.warrantyExpDate, appliance.cost])
         // save execution of both queries
         await connection.commit();
         // object is returned if the execution was successful
-        return Response.json({userID: newUserID}, {status: 201})
+        return Response.json({userID}, {status: 201})
 
 
     } catch (err) {
         // delete all the data sent to the system if error has occurred
         await connection.rollback()
-        // duplicate email triggers a UNIQUE constraint violation — surface it as a 409
-        if (err.code === 'ER_DUP_ENTRY') {
-            return Response.json(
-                {errors: {user: {email: 'This email is already registered.'}}},
-                {status: 409}
-            )
-        }
         return Response.json({error: err.message}, {status: 500})
     } finally {
         // close the connection
