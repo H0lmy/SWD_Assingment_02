@@ -58,6 +58,13 @@ export async function POST(request) {
     } catch (err) {
         // delete all the data sent to the system if error has occurred
         await connection.rollback()
+        // duplicate serial number triggers a UNIQUE constraint violation
+        if (err.code === 'ER_DUP_ENTRY') {
+            return Response.json(
+                {errors: {appliance: {serialNumber: 'An appliance with this serial number already exists.'}}},
+                {status: 409}
+            )
+        }
         return Response.json({error: err.message}, {status: 500})
     } finally {
         // close the connection

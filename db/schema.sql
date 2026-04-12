@@ -3,6 +3,8 @@
 CREATE DATABASE IF NOT EXISTS Appliance;
 USE Appliance;
 
+ALTER TABLE appliance ADD UNIQUE (serialNumber);
+
 CREATE TABLE IF NOT EXISTS users (
     userID    BIGINT       AUTO_INCREMENT PRIMARY KEY,
     firstName VARCHAR(50)  NOT NULL,
@@ -33,6 +35,7 @@ ALTER TABLE appliance
     ADD CONSTRAINT fk_appliance_user
         FOREIGN KEY (userID) REFERENCES users(userID)
             ON DELETE CASCADE;
+
 
 
 
