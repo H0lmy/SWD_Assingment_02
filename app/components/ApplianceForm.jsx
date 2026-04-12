@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import Link from 'next/link'
 
 export default function ApplianceForm({userData}) {
     const [applianceFields, setApplianceFields] = useState({
@@ -48,7 +49,12 @@ export default function ApplianceForm({userData}) {
             <form onSubmit={handleSubmit}>
                 <h3>Appliance Details</h3>
 
-                {success && <p className="success-message">{success}</p>}
+                {success && (
+                    <div className="success-message">
+                        <p>{success}</p>
+                        <Link href="/"><button type="button" className="submit-btn">Back to Homepage</button></Link>
+                    </div>
+                )}
 
                 <div className="form-group">
                     <label>Appliance Type</label>

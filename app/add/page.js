@@ -15,7 +15,6 @@ export default function AddPage() {
 
     return (
         <div>
-            <h2>Add Appliance</h2>
             {step === 1
                 ? <AddUserForm onSubmit={handleUserSubmit} />
                 : <ApplianceForm userData={userData} />
