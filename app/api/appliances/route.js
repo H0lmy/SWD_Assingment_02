@@ -64,27 +64,54 @@ export async function POST(request) {
 export async function GET(request) {
     const {searchParams} = new URL(request.url)
     const serialNumber = (searchParams.get('serialNumber') ?? '').trim()
+    const applianceType = (searchParams.get('applianceType') ?? '')
+    const brand = (searchParams.get('brand') ?? '')
+    const modelNumber = (searchParams.get('modelNumber') ?? '')
 
     // validate the format before
-    if (!/^\d{4}-\d{4}-\d{4}$/.test(serialNumber)) {
+    if (serialNumber && !/^\d{4}-\d{4}-\d{4}$/.test(serialNumber)) {
         return Response.json(
             {error: 'Invalid serial number. Expected format: 0000-0000-0000.'},
             {status: 400}
         )
     }
 
+    if(!serialNumber && !applianceType && !modelNumber && !brand ) {
+        return Response.json({error:'Provide at least one parameter.'},{status: 400})
+    }
+
     // open connection
-    const connection = await pool.getConnection()
+    const connection = await pool.getConnection();
+
+    const conditions =[];
+    const params = [];
+    if(serialNumber){
+        conditions.push('serialNumber = ?');
+        params.push(serialNumber);
+    }
+    if(applianceType){
+        conditions.push('applianceType = ?');
+        params.push(applianceType);
+    }
+    if(brand){
+        conditions.push('brand = ?');
+        params.push(brand);
+    }
+    if(modelNumber){
+        conditions.push('modelNumber = ?');
+        params.push(modelNumber);
+    }
+    const whereClause = conditions.join(' AND ');
     try {
         const [rows] = await connection.query(
-            'SELECT appliance.applianceType,appliance.serialNumber,appliance.brand,appliance.cost FROM Appliance.appliance WHERE serialNumber = ?',
-            [serialNumber]
+            `SELECT applianceType, serialNumber, brand, modelNumber, purchaseDate, warrantyExpDate, cost FROM Appliance.appliance WHERE ${whereClause}`,
+            params
         )
 
         // if not match - return 404
         if (rows.length === 0) {
             return Response.json(
-                {error: 'No appliance found for that serial number.'},
+                {error: 'No matching appliance found.'},
                 {status: 404}
             )
         }
