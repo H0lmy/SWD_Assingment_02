@@ -195,6 +195,48 @@ export async function PUT(request) {
     }
 }
 
+export async function DELETE(request) {
+    const {searchParams} = new URL(request.url)
+    const serialNumber = (searchParams.get('serialNumber') ?? '').trim()
+
+    // validate serial number format
+    if (!/^\d{4}-\d{4}-\d{4}$/.test(serialNumber)) {
+        return Response.json(
+            {error: 'Invalid serial number. Expected format: 0000-0000-0000.'},
+            {status: 400}
+        )
+    }
+
+    const connection = await pool.getConnection()
+    try {
+        await connection.beginTransaction()
+
+        // check the appliance exists before deleting
+        const [existing] = await connection.query(
+            `SELECT applianceType, brand, serialNumber
+             FROM Appliance.appliance
+             WHERE serialNumber = ?`, [serialNumber]
+        )
+
+        if (existing.length === 0) {
+            return Response.json({error: 'No matching appliance found.'}, {status: 404})
+        }
+
+        await connection.query(
+            `DELETE FROM Appliance.appliance
+             WHERE serialNumber = ?`, [serialNumber]
+        )
+
+        await connection.commit()
+        return Response.json({message: 'Appliance has been deleted.', deleted: existing[0]}, {status: 200})
+    } catch (error) {
+        await connection.rollback()
+        return Response.json({error: error.message}, {status: 500})
+    } finally {
+        connection.release()
+    }
+}
+
 function validate(payload) {
     const errors = {user: {}, appliance: {}}
     const {user, appliance} = payload
@@ -313,7 +355,20 @@ function toMysqlDate(str) {
     const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(str.trim())
     if (!match) return null
     const [, day, month, year] = match
-    const d = new Date(`${year}-${month}-${day}`)
+    const d = new Date(`
+        $
+        {
+            year
+        }
+        -$
+        {
+            month
+        }
+        -$
+        {
+            day
+        }
+        `)
     if (
         d.getFullYear() !== Number(year) ||
         d.getMonth() + 1 !== Number(month) ||
@@ -321,7 +376,20 @@ function toMysqlDate(str) {
     ) {
         return null
     }
-    return `${year}-${month}-${day}`   // 'YYYY-MM-DD' is what MySQL DATE valid format required
+    return `
+        $
+        {
+            year
+        }
+        -$
+        {
+            month
+        }
+        -$
+        {
+            day
+        }
+        `   // 'YYYY-MM-DD' is what MySQL DATE valid format required
 }
 
 // conversion to javascript number function
