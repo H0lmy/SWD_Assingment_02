@@ -223,7 +223,8 @@ export async function DELETE(request) {
         }
 
         await connection.query(
-            `DELETE FROM Appliance.appliance
+            `DELETE
+             FROM Appliance.appliance
              WHERE serialNumber = ?`, [serialNumber]
         )
 
@@ -355,20 +356,7 @@ function toMysqlDate(str) {
     const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(str.trim())
     if (!match) return null
     const [, day, month, year] = match
-    const d = new Date(`
-        $
-        {
-            year
-        }
-        -$
-        {
-            month
-        }
-        -$
-        {
-            day
-        }
-        `)
+    const d = new Date(`${year}-${month}-${day}`)
     if (
         d.getFullYear() !== Number(year) ||
         d.getMonth() + 1 !== Number(month) ||
@@ -376,20 +364,7 @@ function toMysqlDate(str) {
     ) {
         return null
     }
-    return `
-        $
-        {
-            year
-        }
-        -$
-        {
-            month
-        }
-        -$
-        {
-            day
-        }
-        `   // 'YYYY-MM-DD' is what MySQL DATE valid format required
+    return d;
 }
 
 // conversion to javascript number function
