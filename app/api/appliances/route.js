@@ -1,5 +1,6 @@
 import pool from "../../library/db.js";
 
+
 export async function POST(request) {
     let rawPayload
     try {
@@ -60,7 +61,6 @@ export async function POST(request) {
 }
 
 
-
 export async function GET(request) {
     const {searchParams} = new URL(request.url)
     const serialNumber = (searchParams.get('serialNumber') ?? '').trim()
@@ -76,35 +76,37 @@ export async function GET(request) {
         )
     }
 
-    if(!serialNumber && !applianceType && !modelNumber && !brand ) {
-        return Response.json({error:'Provide at least one parameter.'},{status: 400})
+    if (!serialNumber && !applianceType && !modelNumber && !brand) {
+        return Response.json({error: 'Provide at least one parameter.'}, {status: 400})
     }
 
     // open connection
     const connection = await pool.getConnection();
 
-    const conditions =[];
+    const conditions = [];
     const params = [];
-    if(serialNumber){
+    if (serialNumber) {
         conditions.push('serialNumber = ?');
         params.push(serialNumber);
     }
-    if(applianceType){
+    if (applianceType) {
         conditions.push('applianceType = ?');
         params.push(applianceType);
     }
-    if(brand){
+    if (brand) {
         conditions.push('brand = ?');
         params.push(brand);
     }
-    if(modelNumber){
+    if (modelNumber) {
         conditions.push('modelNumber = ?');
         params.push(modelNumber);
     }
     const whereClause = conditions.join(' AND ');
     try {
         const [rows] = await connection.query(
-            `SELECT applianceType, serialNumber, brand, modelNumber, purchaseDate, warrantyExpDate, cost FROM Appliance.appliance WHERE ${whereClause}`,
+            `SELECT applianceType, serialNumber, brand, modelNumber, purchaseDate, warrantyExpDate, cost
+             FROM Appliance.appliance
+             WHERE ${whereClause}`,
             params
         )
 
@@ -121,6 +123,74 @@ export async function GET(request) {
         return Response.json({error: err.message}, {status: 500})
     } finally {
         // release the connection back to the pool
+        connection.release()
+    }
+}
+
+export async function PUT(request) {
+    // retrieve the raw data from frontend
+    let rawPayload
+    try {
+        rawPayload = await request.json()
+    } catch {
+        return Response.json({error: 'Invalid JSON body.'}, {status: 400})
+    }
+    // sanitise and validate data
+    const cleaned = sanitizePayload(rawPayload)
+    const errors = validate(cleaned)
+    if (Object.keys(errors).length > 0) {
+        return Response.json({errors}, {status: 400})
+    }
+
+    const connection = await pool.getConnection()
+    try {
+        // open connection
+        await connection.beginTransaction()
+        // get appliance id and userid related to an appliance of certain user
+        const [existing] = await connection.query(
+            `SELECT applianceID, userID
+             FROM Appliance.appliance
+             WHERE serialNumber = ?`, [cleaned.appliance.serialNumber]
+        )
+
+        if (existing.length === 0) {
+            return Response.json({error: 'No matching appliance found.'}, {status: 404})
+        }
+        // update appliance data, save the unique modifiers unchangable
+        await connection.query(
+            `UPDATE Appliance.appliance
+             SET applianceType   = ?,
+                 brand           = ?,
+                 modelNumber     = ?,
+                 purchaseDate    = ?,
+                 warrantyExpDate = ?,
+                 cost            = ?
+             WHERE applianceID = ?`,
+            [cleaned.appliance.applianceType, cleaned.appliance.brand,
+                cleaned.appliance.modelNumber, cleaned.appliance.purchaseDate,
+                cleaned.appliance.warrantyExpDate, cleaned.appliance.cost,
+                existing[0].applianceID]
+        )
+        // update users data except unique modifiers
+        await connection.query(
+            `UPDATE Appliance.users
+             SET firstName = ?,
+                 lastName  = ?,
+                 address   = ?,
+                 mobile    = ?,
+                 eircode   = ?
+             WHERE userID = ?`,
+            [cleaned.user.firstName, cleaned.user.lastName, cleaned.user.address,
+                cleaned.user.mobile, cleaned.user.eircode,
+                existing[0].userID]
+        )
+        // execute both queries
+        await connection.commit()
+        return Response.json({message: 'Appliance has been updated.'}, {status: 200})
+    } catch (error) {
+        await connection.rollback()
+        return Response.json({error: error.message}, {status: 500})
+    } finally {
         connection.release()
     }
 }
