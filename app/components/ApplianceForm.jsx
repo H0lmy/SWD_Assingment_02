@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import Link from 'next/link'
 
-export default function ApplianceForm({userData}) {
+export default function ApplianceForm({userID}) {
     const [applianceFields, setApplianceFields] = useState({
         applianceType: '',
         brand: '',
@@ -28,7 +28,7 @@ export default function ApplianceForm({userData}) {
             const res = await fetch('/api/appliances', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user: userData, appliance: applianceFields})
+                body: JSON.stringify({userID, appliance: applianceFields})
             })
 
             const data = await res.json()
@@ -98,7 +98,6 @@ export default function ApplianceForm({userData}) {
                     {errors.appliance?.cost && <span className="error">{errors.appliance.cost}</span>}
                 </div>
 
-                {errors.user?.email && <p className="error">{errors.user.email}</p>}
                 {errors.general && <p className="error">{errors.general}</p>}
 
                 <button type="submit" className="submit-btn">Register Appliance</button>

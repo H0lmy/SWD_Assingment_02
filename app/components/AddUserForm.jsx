@@ -1,6 +1,6 @@
 import {useState} from "react";
 
-export default function AddUserForm({onSubmit}) {
+export default function AddUserForm({onSubmit, serverErrors}) {
     const [userFields, setUserFields] = useState({
         firstName: '',
         lastName: '',
@@ -19,9 +19,11 @@ export default function AddUserForm({onSubmit}) {
     function handleSubmit(e) {
         e.preventDefault()
         setErrors({})
-        // pass user data up to the parent
         onSubmit(userFields)
     }
+
+    // surface validation errors returned by the API
+    const shownErrors = serverErrors ?? errors
 
     return (
         <div className="appliance-form">
@@ -31,40 +33,40 @@ export default function AddUserForm({onSubmit}) {
                 <div className="form-group">
                     <label>First Name</label>
                     <input name="firstName" value={userFields.firstName} onChange={handleChange} placeholder="First Name" />
-                    {errors.firstName && <span className="error">{errors.firstName}</span>}
+                    {shownErrors.firstName && <span className="error">{shownErrors.firstName}</span>}
                 </div>
 
                 <div className="form-group">
                     <label>Last Name</label>
                     <input name="lastName" value={userFields.lastName} onChange={handleChange} placeholder="Last Name" />
-                    {errors.lastName && <span className="error">{errors.lastName}</span>}
+                    {shownErrors.lastName && <span className="error">{shownErrors.lastName}</span>}
                 </div>
 
                 <div className="form-group">
                     <label>Address</label>
                     <input name="address" value={userFields.address} onChange={handleChange} placeholder="123 Main Street, Dublin" />
-                    {errors.address && <span className="error">{errors.address}</span>}
+                    {shownErrors.address && <span className="error">{shownErrors.address}</span>}
                 </div>
 
                 <div className="form-group">
                     <label>Email</label>
                     <input name="email" value={userFields.email} onChange={handleChange} placeholder="email@example.com" />
-                    {errors.email && <span className="error">{errors.email}</span>}
+                    {shownErrors.email && <span className="error">{shownErrors.email}</span>}
                 </div>
 
                 <div className="form-group">
                     <label>Mobile</label>
                     <input name="mobile" value={userFields.mobile} onChange={handleChange} placeholder="+353851234567" />
-                    {errors.mobile && <span className="error">{errors.mobile}</span>}
+                    {shownErrors.mobile && <span className="error">{shownErrors.mobile}</span>}
                 </div>
 
                 <div className="form-group">
                     <label>Eircode</label>
                     <input name="eircode" value={userFields.eircode} onChange={handleChange} placeholder="D01 X2Y3" />
-                    {errors.eircode && <span className="error">{errors.eircode}</span>}
+                    {shownErrors.eircode && <span className="error">{shownErrors.eircode}</span>}
                 </div>
 
-                {errors.general && <p className="error">{errors.general}</p>}
+                {shownErrors.general && <p className="error">{shownErrors.general}</p>}
 
                 <button type="submit" className="submit-btn">Next</button>
             </form>
