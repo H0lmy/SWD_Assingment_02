@@ -1,5 +1,5 @@
 import pool from '../../library/db.js'
-
+// post method for user data
 export async function POST(request) {
     let rawPayload
     try {
@@ -7,7 +7,7 @@ export async function POST(request) {
     } catch {
         return Response.json({error: 'Invalid JSON body'}, {status: 400})
     }
-
+    // sanitised and validated input
     const cleaned = sanitizeUserPayload(rawPayload)
     const errors = validateUser(cleaned)
     if (Object.keys(errors).length > 0) {
@@ -17,7 +17,7 @@ export async function POST(request) {
     const {user} = cleaned
     const connection = await pool.getConnection()
     try {
-
+        // check if user wiht same email is in teh db
         const [existing] = await connection.query(
             'SELECT userID FROM Appliance.users WHERE email = ?',
             [user.email]
@@ -25,7 +25,7 @@ export async function POST(request) {
         if (existing.length > 0) {
             return Response.json({userID: existing[0].userID}, {status: 200})
         }
-
+        // post query
         const [result] = await connection.query(
             `INSERT INTO Appliance.users(firstName, lastName, address, mobile, email, eircode)
              VALUES (?, ?, ?, ?, ?, ?)`,
@@ -38,7 +38,7 @@ export async function POST(request) {
         connection.release()
     }
 }
-
+// get request by email
 export async function GET(request) {
     const {searchParams} = new URL(request.url)
     const email = (searchParams.get('email') ?? '').trim().toLowerCase()
@@ -49,23 +49,27 @@ export async function GET(request) {
 
     const connection = await pool.getConnection()
     try {
+        //query itself
         const [rows] = await connection.query(
             `SELECT firstName, lastName, address, mobile, email, eircode
              FROM Appliance.users
              WHERE email = ?`,
             [email]
         )
+        // no user if found- retrieve 404
         if (rows.length === 0) {
             return Response.json({error: 'No matching user found.'}, {status: 404})
         }
+        // return user data
         return Response.json(rows[0], {status: 200})
     } catch (err) {
         return Response.json({error: err.message}, {status: 500})
     } finally {
+        //close connection
         connection.release()
     }
 }
-
+// put method ehich is used to update the user data
 export async function PUT(request) {
     let rawPayload
     try {
@@ -73,7 +77,7 @@ export async function PUT(request) {
     } catch {
         return Response.json({error: 'Invalid JSON body'}, {status: 400})
     }
-
+    // sanitised and validated input
     const cleaned = sanitizeUserPayload(rawPayload)
     const errors = validateUser(cleaned)
     if (Object.keys(errors).length > 0) {
@@ -84,7 +88,7 @@ export async function PUT(request) {
     const connection = await pool.getConnection()
     try {
         await connection.beginTransaction()
-
+        // check for existence of the user of particular email in the db
         const [existing] = await connection.query(
             'SELECT userID FROM Appliance.users WHERE email = ?',
             [user.email]
@@ -92,7 +96,7 @@ export async function PUT(request) {
         if (existing.length === 0) {
             return Response.json({error: 'No matching user found.'}, {status: 404})
         }
-
+        // query itself
         await connection.query(
             `UPDATE Appliance.users
              SET firstName = ?,
@@ -114,7 +118,7 @@ export async function PUT(request) {
         connection.release()
     }
 }
-
+// sanitisation of each parameter of the user object
 function sanitizeUserPayload(payload) {
     const {user = {}} = payload ?? {}
     return {
@@ -128,7 +132,7 @@ function sanitizeUserPayload(payload) {
         },
     }
 }
-
+// validation for each para,eter of user data
 function validateUser(payload) {
     const errors = {user: {}}
     const {user} = payload
