@@ -51,7 +51,7 @@ export async function GET(request) {
     try {
         //query itself
         const [rows] = await connection.query(
-            `SELECT firstName, lastName, address, mobile, email, eircode
+            `SELECT userID, firstName, lastName, address, mobile, email, eircode
              FROM Appliance.users
              WHERE email = ?`,
             [email]

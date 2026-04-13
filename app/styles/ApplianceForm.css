@@ -35,6 +35,12 @@
   color: #e0e0e0;
 }
 
+.appliance-form .form-hint {
+  color: #b0b0b0;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
 .appliance-form .form-group {
   margin-bottom: 1rem;
 }
