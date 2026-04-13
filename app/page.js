@@ -5,7 +5,7 @@ export default function Home() {
     <div className="home-actions">
       <Link href="/add"><button>Add Appliance</button></Link>
       <Link href="/search"><button>Search Appliance</button></Link>
-      <button>Update Appliance</button>
+      <Link href= "/update"><button>Update data</button></Link>
       <button>Delete Appliance</button>
     </div>
   )

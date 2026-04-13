@@ -52,48 +52,51 @@ export default function UpdateUserData({initialUser, onUpdated}) {
 
     return (
         <form onSubmit={handleSubmit}>
-            <label>
-                First name
-                <input name="firstName" value={userData.firstName} onChange={handleChange}/>
-                {fieldErrors.firstName && <span>{fieldErrors.firstName}</span>}
-            </label>
+            <h3>Edit User Details</h3>
 
-            <label>
-                Last name
-                <input name="lastName" value={userData.lastName} onChange={handleChange}/>
-                {fieldErrors.lastName && <span>{fieldErrors.lastName}</span>}
-            </label>
+            {success && <div className="success-message">{success}</div>}
 
-            <label>
-                Address
-                <input name="address" value={userData.address} onChange={handleChange}/>
-                {fieldErrors.address && <span>{fieldErrors.address}</span>}
-            </label>
+            <div className="form-group">
+                <label>First Name</label>
+                <input name="firstName" value={userData.firstName} onChange={handleChange} placeholder="First Name"/>
+                {fieldErrors.firstName && <span className="error">{fieldErrors.firstName}</span>}
+            </div>
 
-            <label>
-                Mobile
-                <input name="mobile" value={userData.mobile} onChange={handleChange}/>
-                {fieldErrors.mobile && <span>{fieldErrors.mobile}</span>}
-            </label>
+            <div className="form-group">
+                <label>Last Name</label>
+                <input name="lastName" value={userData.lastName} onChange={handleChange} placeholder="Last Name"/>
+                {fieldErrors.lastName && <span className="error">{fieldErrors.lastName}</span>}
+            </div>
 
-            <label>
-                Email
-                <input name="email" type="email" value={userData.email} onChange={handleChange}/>
-                {fieldErrors.email && <span>{fieldErrors.email}</span>}
-            </label>
+            <div className="form-group">
+                <label>Address</label>
+                <input name="address" value={userData.address} onChange={handleChange} placeholder="123 Main Street, Dublin"/>
+                {fieldErrors.address && <span className="error">{fieldErrors.address}</span>}
+            </div>
 
-            <label>
-                Eircode
-                <input name="eircode" value={userData.eircode} onChange={handleChange}/>
-                {fieldErrors.eircode && <span>{fieldErrors.eircode}</span>}
-            </label>
+            <div className="form-group">
+                <label>Mobile</label>
+                <input name="mobile" value={userData.mobile} onChange={handleChange} placeholder="+353851234567"/>
+                {fieldErrors.mobile && <span className="error">{fieldErrors.mobile}</span>}
+            </div>
 
-            <button type="submit" disabled={submitting}>
+            <div className="form-group">
+                <label>Email</label>
+                <input name="email" type="email" value={userData.email} onChange={handleChange} placeholder="email@example.com"/>
+                {fieldErrors.email && <span className="error">{fieldErrors.email}</span>}
+            </div>
+
+            <div className="form-group">
+                <label>Eircode</label>
+                <input name="eircode" value={userData.eircode} onChange={handleChange} placeholder="D01 X2Y3"/>
+                {fieldErrors.eircode && <span className="error">{fieldErrors.eircode}</span>}
+            </div>
+
+            {generalError && <p className="error" role="alert">{generalError}</p>}
+
+            <button type="submit" className="submit-btn" disabled={submitting}>
                 {submitting ? 'Saving…' : 'Save changes'}
             </button>
-
-            {generalError && <p role="alert">{generalError}</p>}
-            {success && <p>{success}</p>}
         </form>
     )
 }
