@@ -6,7 +6,7 @@ export default function Home() {
       <Link href="/add"><button>Add Appliance</button></Link>
       <Link href="/search"><button>Search Appliance</button></Link>
       <Link href= "/update"><button>Update data</button></Link>
-      <button>Delete Appliance</button>
+      <Link href="/delete/appliance"><button>Delete Appliance</button></Link>
     </div>
   )
 }
