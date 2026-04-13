@@ -39,6 +39,33 @@ export async function POST(request) {
     }
 }
 
+export async function GET(request) {
+    const {searchParams} = new URL(request.url)
+    const email = (searchParams.get('email') ?? '').trim().toLowerCase()
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return Response.json({error: 'Please enter a valid email.'}, {status: 400})
+    }
+
+    const connection = await pool.getConnection()
+    try {
+        const [rows] = await connection.query(
+            `SELECT firstName, lastName, address, mobile, email, eircode
+             FROM Appliance.users
+             WHERE email = ?`,
+            [email]
+        )
+        if (rows.length === 0) {
+            return Response.json({error: 'No matching user found.'}, {status: 404})
+        }
+        return Response.json(rows[0], {status: 200})
+    } catch (err) {
+        return Response.json({error: err.message}, {status: 500})
+    } finally {
+        connection.release()
+    }
+}
+
 export async function PUT(request) {
     let rawPayload
     try {

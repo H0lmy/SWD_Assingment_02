@@ -7,8 +7,11 @@ export default function UpdateUserPage() {
     const [step, setStep] = useState(1)
     const [email, setEmail] = useState('')
     const [emailError, setEmailError] = useState(null)
+    const [lookupError, setLookupError] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [user, setUser] = useState(null)
 
-    function handleEmailSubmit(e) {
+    async function handleEmailSubmit(e) {
         e.preventDefault()
         const trimmed = email.trim().toLowerCase()
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -16,8 +19,24 @@ export default function UpdateUserPage() {
             return
         }
         setEmailError(null)
-        setEmail(trimmed)
-        setStep(2)
+        setLookupError(null)
+        setLoading(true)
+
+        try {
+            const res = await fetch(`/api/users?email=${encodeURIComponent(trimmed)}`)
+            const data = await res.json()
+            if (!res.ok) {
+                setLookupError(data.error ?? 'Lookup failed.')
+                return
+            }
+            setEmail(trimmed)
+            setUser(data)
+            setStep(2)
+        } catch {
+            setLookupError('Could not connect to the server.')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -34,11 +53,14 @@ export default function UpdateUserPage() {
                             placeholder="email@example.com"
                         />
                         {emailError && <span className="error">{emailError}</span>}
+                        {lookupError && <span className="error">{lookupError}</span>}
                     </div>
-                    <button type="submit" className="submit-btn">Next</button>
+                    <button type="submit" className="submit-btn" disabled={loading}>
+                        {loading ? 'Checking…' : 'Next'}
+                    </button>
                 </form>
             ) : (
-                <UpdateUserData initialUser={{email}}/>
+                <UpdateUserData initialUser={user}/>
             )}
         </div>
     )
